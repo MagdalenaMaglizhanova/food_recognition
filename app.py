@@ -11,24 +11,39 @@ html_code = """
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fruit Classifier</title>
+  <title>Fruit & Food Classifier</title>
+
+  <!-- TensorFlow.js и TeachableMachine библиотеките -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background: #f0f0f0;
+      background: #f8f8f8;
       padding: 20px;
     }
-    video {
-      border: 4px solid #333;
-      border-radius: 10px;
+
+    h1 {
+      font-size: 2em;
       margin-bottom: 20px;
     }
+
+    #webcam-container {
+      margin: 0 auto;
+      border: 4px solid #333;
+      border-radius: 10px;
+      width: fit-content;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border-radius: 10px;
+    }
+
     #result {
       font-size: 1.5em;
-      margin-top: 10px;
       background: #fff;
       display: inline-block;
       padding: 10px 20px;
@@ -38,12 +53,14 @@ html_code = """
   </style>
 </head>
 <body>
+
   <h1>🍎 Food & Fruit Classifier</h1>
-  <video id="webcam" autoplay playsinline width="224" height="224"></video>
+  <div id="webcam-container"></div>
   <div id="result">Loading...</div>
 
   <script type="text/javascript">
-    const URL = "./"; 
+    const URL = "./"; // ако model.json и metadata.json са в същата папка
+
     let model, webcam;
 
     const calorieTable = {
@@ -58,20 +75,23 @@ html_code = """
       "Apricot": 48,
       "Eggplant": 25,
       "Apple": 52,
-      "Lukanka": 450
+      "Lukanka": 450 // ориентировъчно за 100 г
     };
 
     async function init() {
-      model = await tmImage.load(URL + "model.json", URL + "metadata.json");
-      webcam = new tmImage.Webcam(224, 224, true);
-      await webcam.setup();
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      model = await tmImage.load(modelURL, metadataURL);
+      webcam = new tmImage.Webcam(224, 224, true); // размер и огледален образ
+      await webcam.setup(); // изисква разрешение
       await webcam.play();
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
       window.requestAnimationFrame(loop);
-      document.getElementById("webcam").appendChild(webcam.canvas);
     }
 
     async function loop() {
-      webcam.update();
+      webcam.update(); // актуализира кадъра
       await predict();
       window.requestAnimationFrame(loop);
     }
@@ -79,6 +99,7 @@ html_code = """
     async function predict() {
       const prediction = await model.predict(webcam.canvas);
       const top = prediction.sort((a, b) => b.probability - a.probability)[0];
+
       const label = top.className;
       const calories = calorieTable[label] || "?";
 
@@ -90,6 +111,7 @@ html_code = """
 
     init();
   </script>
+
 </body>
 </html>
 """
