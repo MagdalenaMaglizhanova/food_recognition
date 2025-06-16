@@ -983,14 +983,14 @@
       }
     }
 
-    function setDailyGoal() {
-      const newGoal = prompt("Enter your daily calorie goal:", dailyGoal);
-      if (newGoal && !isNaN(newGoal) {
-        dailyGoal = parseInt(newGoal);
-        localStorage.setItem('dailyGoal', dailyGoal);
-        updateDailySummary();
-      }
-    }
+   function setDailyGoal() {
+  const newGoal = prompt("Enter your daily calorie goal:", dailyGoal);
+  if (newGoal && !isNaN(newGoal)) {
+    dailyGoal = parseInt(newGoal);
+    localStorage.setItem('dailyGoal', dailyGoal);
+    updateDailySummary();
+  }
+}
 
     function switchTab(e) {
       // Remove active class from all tabs
