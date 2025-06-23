@@ -1103,7 +1103,7 @@
       currentLanguage = currentLanguage === 'en' ? 'bg' : 'en';
       localStorage.setItem('language', currentLanguage);
       updateLanguageDisplay();
-      if (lastCapture) updateFoodInfo(lastCapture); // Refresh food info with new language
+      updateFoodInfo(lastCapture); // Refresh food info with new language
       updateHistoryList(); // Refresh history with new language
       updateDailySummary(); // Refresh daily summary with new language
       updateRecipeSuggestions(); // Refresh recipes with new language
@@ -1118,11 +1118,6 @@
       // Show elements for current language
       document.querySelectorAll(`.${currentLanguage}`).forEach(el => {
         el.classList.remove('hidden');
-      });
-      
-      // Special handling for elements with both classes
-      document.querySelectorAll('#result.en, #result.bg').forEach(el => {
-        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
       });
     }
 
@@ -1181,14 +1176,10 @@
       });
       
       // Update result display
-      const resultElements = document.querySelectorAll('#result');
-      resultElements.forEach(el => {
-        el.innerHTML = `
-          <span style="color: var(--primary-dark);">${foodData.name[currentLanguage]}</span>
-          <span style="font-size: 1rem; color: #666;">~${foodData.calories} kcal/100g</span>
-        `;
-        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
-      });
+      document.getElementById("result").innerHTML = `
+        <span style="color: var(--primary-dark);">${foodData.name[currentLanguage]}</span>
+        <span style="font-size: 1rem; color: #666;">~${foodData.calories} kcal/100g</span>
+      `;
     }
 
     function getFoodIcon(foodName) {
@@ -1236,14 +1227,10 @@
       addToDailyCalories(lastCapture);
       
       // Show confirmation
-      const resultElements = document.querySelectorAll('#result');
-      resultElements.forEach(el => {
-        el.innerHTML = `
-          <span style="color: var(--primary);"><i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'Captured:' : 'Снимано:'}</span>
-          <span style="color: var(--primary-dark);"> ${foodDatabase[lastCapture]?.name[currentLanguage] || lastCapture}</span>
-        `;
-        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
-      });
+      document.getElementById("result").innerHTML = `
+        <span style="color: var(--primary);"><i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'Captured:' : 'Снимано:'}</span>
+        <span style="color: var(--primary-dark);"> ${foodDatabase[lastCapture]?.name[currentLanguage] || lastCapture}</span>
+      `;
       
       // Update recipe suggestions
       updateRecipeSuggestions();
@@ -1445,9 +1432,8 @@
       
       if (recentScans.length === 0) {
         recipeContainer.innerHTML = `
-          <p class="${currentLanguage}">${currentLanguage === 'en' 
-            ? 'Scan some vegetables or fruits to get recipe suggestions.' 
-            : 'Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.'}</p>
+          <p class="en">Scan some vegetables or fruits to get recipe suggestions.</p>
+          <p class="bg hidden">Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.</p>
         `;
         return;
       }
@@ -1457,9 +1443,8 @@
       
       if (matchingRecipes.length === 0) {
         recipeContainer.innerHTML = `
-          <p class="${currentLanguage}">${currentLanguage === 'en' 
-            ? 'No recipes found for your recently scanned items. Try scanning more vegetables.' 
-            : 'Не са намерени рецепти за скоро сканираните продукти. Опитайте да сканирате повече зеленчуци.'}</p>
+          <p class="en">No recipes found for your recently scanned items. Try scanning more vegetables.</p>
+          <p class="bg hidden">Не са намерени рецепти за скоро сканираните продукти. Опитайте да сканирате повече зеленчуци.</p>
         `;
         return;
       }
@@ -1467,8 +1452,6 @@
       // Display matching recipes
       matchingRecipes.forEach(recipeKey => {
         const recipe = recipeDatabase[recipeKey];
-        if (!recipe) return;
-        
         const recipeCard = document.createElement("div");
         recipeCard.className = "recipe-card";
         recipeCard.innerHTML = `
@@ -1477,14 +1460,16 @@
             ${recipe.name[currentLanguage]}
           </div>
           <div class="recipe-ingredients">
-            <strong>${currentLanguage === 'en' ? 'Ingredients:' : 'Съставки:'}</strong>
+            <strong class="en">Ingredients:</strong>
+            <strong class="bg hidden">Съставки:</strong>
             ${recipe.ingredients[currentLanguage].join(", ")}
           </div>
           <div class="recipe-description">
             ${recipe.description[currentLanguage]}
           </div>
           <a href="${recipe.link[currentLanguage]}" target="_blank" class="recipe-link">
-            ${currentLanguage === 'en' ? 'View recipe' : 'Виж рецепта'}
+            <span class="en">View recipe</span>
+            <span class="bg hidden">Виж рецепта</span>
             <i class="fas fa-external-link-alt"></i>
           </a>
         `;
@@ -1494,24 +1479,24 @@
 
     function findMatchingRecipes(scannedItems) {
       // Sort scanned items alphabetically for consistent matching
-      const sortedItems = [...scannedItems].sort();
+      scannedItems.sort();
       
       // Try to find exact matches with 2-3 items
       const possibleCombinations = [];
       
       // Check all possible 2-item combinations
-      for (let i = 0; i < sortedItems.length; i++) {
-        for (let j = i + 1; j < sortedItems.length; j++) {
-          const combo = [sortedItems[i], sortedItems[j]].sort().join(" ");
+      for (let i = 0; i < scannedItems.length; i++) {
+        for (let j = i + 1; j < scannedItems.length; j++) {
+          const combo = [scannedItems[i], scannedItems[j]].sort().join(" ");
           possibleCombinations.push(combo);
         }
       }
       
       // Check all possible 3-item combinations
-      for (let i = 0; i < sortedItems.length; i++) {
-        for (let j = i + 1; j < sortedItems.length; j++) {
-          for (let k = j + 1; k < sortedItems.length; k++) {
-            const combo = [sortedItems[i], sortedItems[j], sortedItems[k]].sort().join(" ");
+      for (let i = 0; i < scannedItems.length; i++) {
+        for (let j = i + 1; j < scannedItems.length; j++) {
+          for (let k = j + 1; k < scannedItems.length; k++) {
+            const combo = [scannedItems[i], scannedItems[j], scannedItems[k]].sort().join(" ");
             possibleCombinations.push(combo);
           }
         }
