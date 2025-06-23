@@ -1076,9 +1076,24 @@
         document.getElementById("set-goal-btn").addEventListener("click", setDailyGoal);
         document.getElementById("translate-btn").addEventListener("click", toggleLanguage);
         
-        // Tab switching
+        // Initialize tabs
         document.querySelectorAll('.tab').forEach(tab => {
-          tab.addEventListener('click', switchTab);
+          tab.addEventListener('click', function(e) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+              content.classList.remove('active');
+            });
+            
+            // Show the corresponding tab content
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+          });
         });
         
         // Load history and daily summary
@@ -1394,25 +1409,6 @@
         localStorage.setItem('dailyGoal', dailyGoal);
         updateDailySummary();
       }
-    }
-
-    function switchTab(e) {
-      // Remove active class from all tabs
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Add active class to clicked tab
-      e.target.classList.add('active');
-      
-      // Hide all tab contents
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      
-      // Show the corresponding tab content
-      const tabId = e.target.getAttribute('data-tab');
-      document.getElementById(`${tabId}-tab`).classList.add('active');
     }
 
     function showInfo() {
