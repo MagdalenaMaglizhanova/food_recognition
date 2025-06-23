@@ -1,13 +1,1413 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Останалата част от head секцията остава същата -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriVision - Smart Food Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <!-- TensorFlow.js и TeachableMachine библиотеките -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --primary-dark: #388E3C;
+      --secondary: #FF9800;
+      --dark: #333;
+      --light: #f8f9fa;
+      --danger: #f44336;
+      --white: #ffffff;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--white);
+      padding: 2rem 0;
+      text-align: center;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .language-switcher {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    
+    .btn-language {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s;
+    }
+    
+    .btn-language:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subtitle {
+      font-weight: 300;
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+      .main-content {
+        flex-direction: row;
+      }
+      
+      .webcam-section {
+        flex: 1;
+      }
+      
+      .info-section {
+        flex: 1;
+      }
+    }
+    
+    .card {
+      background: var(--white);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    #webcam-container {
+      position: relative;
+      margin: 0 auto;
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+    }
+    
+    .webcam-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    
+    #result {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      text-align: center;
+      margin: 1rem 0;
+    }
+    
+    .nutrition-info {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .nutrition-item {
+      text-align: center;
+      flex: 1;
+      min-width: 80px;
+    }
+    
+    .nutrition-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .nutrition-label {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
+    .health-benefits {
+      margin-top: 1.5rem;
+    }
+    
+    .benefits-title {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .benefits-list {
+      list-style-type: none;
+    }
+    
+    .benefits-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .benefits-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .benefits-list li i {
+      color: var(--primary);
+    }
+    
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+    }
+    
+    .btn-secondary:hover {
+      background: #F57C00;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+    }
+    
+    .btn-danger:hover {
+      background: #d32f2f;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .watermark {
+      opacity: 0.6;
+      font-size: 0.8rem;
+    }
+    
+    /* New styles for history and daily calories */
+    .history-section {
+      margin-top: 2rem;
+    }
+    
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 0;
+    }
+    
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #eee;
+      align-items: center;
+    }
+    
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    
+    .history-item-info {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    
+    .history-item-icon {
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    
+    .history-item-calories {
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+    
+    .history-item-time {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    
+    .history-item-delete {
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .history-item-delete:hover {
+      color: var(--danger);
+    }
+    
+    .daily-summary {
+      background: linear-gradient(135deg, #f5f7fa, #e4e8eb);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+    
+    .daily-summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+    
+    .daily-summary-total {
+      font-weight: 700;
+      border-top: 2px solid #ddd;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 1rem;
+    }
+    
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Recipe suggestions */
+    .recipe-suggestions {
+      margin-top: 1.5rem;
+    }
+    
+    .recipe-card {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .recipe-title {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .recipe-ingredients {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    
+    .recipe-link {
+      color: var(--primary);
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    
+    .recipe-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* Scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #aaa;
+    }
+    
+    /* Translation styles */
+    body.bg {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-  <!-- Останалата част от HTML кода остава същата, освен следния JavaScript -->
+  <header>
+    <div class="container">
+      <div class="language-switcher">
+        <button class="btn-language" id="translate-btn">
+          <i class="fas fa-language"></i>
+          <span class="en">Български</span>
+          <span class="bg hidden">English</span>
+        </button>
+      </div>
+      <h1><i class="fas fa-utensils"></i> <span class="en">NutriVision</span><span class="bg hidden">НутроВизия</span></h1>
+      <p class="subtitle en">Smart food recognition with nutritional analysis</p>
+      <p class="subtitle bg hidden">Интелигентно разпознаване на храна с хранителен анализ</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="main-content">
+      <div class="webcam-section">
+        <div class="card">
+          <div id="webcam-container">
+            <div class="loading" id="loading">
+              <div class="spinner"></div>
+              <p class="en">Loading camera and model...</p>
+              <p class="bg hidden">Зареждане на камера и модел...</p>
+            </div>
+            <div class="webcam-overlay en">Point your camera at food to analyze</div>
+            <div class="webcam-overlay bg hidden">Насочете камерата си към храна за анализ</div>
+          </div>
+          <div id="result" class="en">Ready to analyze</div>
+          <div id="result" class="bg hidden">Готов за анализ</div>
+          <div class="action-buttons">
+            <button class="btn" id="capture-btn"><i class="fas fa-camera"></i> <span class="en">Capture</span><span class="bg hidden">Снимай</span></button>
+            <button class="btn btn-secondary" id="info-btn"><i class="fas fa-info-circle"></i> <span class="en">How It Works</span><span class="bg hidden">Как работи</span></button>
+          </div>
+        </div>
+        
+        <!-- New History Section -->
+        <div class="card history-section">
+          <div class="tabs">
+            <div class="tab active" data-tab="history"><span class="en">Food History</span><span class="bg hidden">История</span></div>
+            <div class="tab" data-tab="daily"><span class="en">Daily Summary</span><span class="bg hidden">Дневен преглед</span></div>
+            <div class="tab" data-tab="recipes"><span class="en">Recipes</span><span class="bg hidden">Рецепти</span></div>
+          </div>
+          
+          <div class="tab-content active" id="history-tab">
+            <div class="history-title">
+              <h3><i class="fas fa-history"></i> <span class="en">Recently Scanned</span><span class="bg hidden">Скоро сканирани</span></h3>
+              <button class="btn btn-danger" id="clear-history-btn"><i class="fas fa-trash"></i> <span class="en">Clear</span><span class="bg hidden">Изчисти</span></button>
+            </div>
+            <ul class="history-list" id="history-list">
+              <!-- History items will be added here -->
+            </ul>
+          </div>
+          
+          <div class="tab-content" id="daily-tab">
+            <h3><i class="fas fa-chart-pie"></i> <span class="en">Today's Nutrition</span><span class="bg hidden">Дневна хранителна стойност</span></h3>
+            <div class="daily-summary">
+              <div class="daily-summary-item">
+                <span class="en">Total Foods:</span>
+                <span class="bg hidden">Общо храни:</span>
+                <span id="total-foods">0</span>
+              </div>
+              <div class="daily-summary-item">
+                <span class="en">Total Calories:</span>
+                <span class="bg hidden">Общо калории:</span>
+                <span id="total-calories">0</span>
+              </div>
+              <div class="daily-summary-item">
+                <span class="en">Total Protein:</span>
+                <span class="bg hidden">Общо протеин:</span>
+                <span id="total-protein">0 g</span>
+              </div>
+              <div class="daily-summary-item">
+                <span class="en">Total Carbs:</span>
+                <span class="bg hidden">Общо въглехидрати:</span>
+                <span id="total-carbs">0 g</span>
+              </div>
+              <div class="daily-summary-item">
+                <span class="en">Total Fat:</span>
+                <span class="bg hidden">Общо мазнини:</span>
+                <span id="total-fat">0 g</span>
+              </div>
+              <div class="daily-summary-item daily-summary-total">
+                <span class="en">Daily Goal Progress:</span>
+                <span class="bg hidden">Дневна цел:</span>
+                <span id="calorie-progress">0%</span>
+              </div>
+            </div>
+            <div class="action-buttons" style="margin-top: 1rem;">
+              <button class="btn btn-secondary" id="set-goal-btn"><i class="fas fa-bullseye"></i> <span class="en">Set Daily Goal</span><span class="bg hidden">Задай дневна цел</span></button>
+            </div>
+          </div>
+          
+          <div class="tab-content" id="recipes-tab">
+            <h3><i class="fas fa-utensils"></i> <span class="en">Recipe Suggestions</span><span class="bg hidden">Предложени рецепти</span></h3>
+            <p class="en">Based on your recently scanned vegetables and fruits:</p>
+            <p class="bg hidden">Въз основа на скоро сканираните зеленчуци и плодове:</p>
+            <div class="recipe-suggestions" id="recipe-suggestions">
+              <p class="en">Scan some vegetables or fruits to get recipe suggestions.</p>
+              <p class="bg hidden">Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="info-section">
+        <div class="card">
+          <h2 id="food-name"><span class="en">Food Information</span><span class="bg hidden">Информация за храната</span></h2>
+          <div class="nutrition-info" id="nutrition-info">
+            <div class="nutrition-item">
+              <div class="nutrition-value" id="calories">--</div>
+              <div class="nutrition-label en">Calories</div>
+              <div class="nutrition-label bg hidden">Калории</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value" id="carbs">--</div>
+              <div class="nutrition-label en">Carbs (g)</div>
+              <div class="nutrition-label bg hidden">Въглехидрати (г)</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value" id="protein">--</div>
+              <div class="nutrition-label en">Protein (g)</div>
+              <div class="nutrition-label bg hidden">Протеин (г)</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value" id="fat">--</div>
+              <div class="nutrition-label en">Fat (g)</div>
+              <div class="nutrition-label bg hidden">Мазнини (г)</div>
+            </div>
+          </div>
+          
+          <div class="health-benefits">
+            <h3 class="benefits-title"><i class="fas fa-heart"></i> <span class="en">Health Benefits</span><span class="bg hidden">Ползи за здравето</span></h3>
+            <ul class="benefits-list" id="benefits-list">
+              <li><i class="fas fa-check"></i> <span class="en">Select a food to see its health benefits</span><span class="bg hidden">Изберете храна, за да видите ползите за здравето</span></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="card" id="tips-card">
+          <h3><i class="fas fa-lightbulb"></i> <span class="en">Nutrition Tips</span><span class="bg hidden">Хранителни съвети</span></h3>
+          <ul class="benefits-list" id="nutrition-tips">
+            <li><i class="fas fa-seedling"></i> <span class="en">Eat a variety of colorful fruits and vegetables daily</span><span class="bg hidden">Яжте разнообразни цветни плодове и зеленчуци всеки ден</span></li>
+            <li><i class="fas fa-glass-whiskey"></i> <span class="en">Stay hydrated with water throughout the day</span><span class="bg hidden">Поддържайте хидратация с вода през целия ден</span></li>
+            <li><i class="fas fa-bread-slice"></i> <span class="en">Choose whole grains over refined grains</span><span class="bg hidden">Избирайте пълнозърнести продукти пред рафинирани</span></li>
+            <li><i class="fas fa-drumstick-bite"></i> <span class="en">Include lean protein sources in your meals</span><span class="bg hidden">Включвайте храни с ниско съдържание на мазнини в храненията си</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p class="en">NutriVision helps you make informed food choices by analyzing nutritional content</p>
+      <p class="bg hidden">NutriVision ви помага да правите информиран избор на храна чрез анализ на хранителното съдържание</p>
+      <p class="watermark">Powered by TensorFlow.js and Teachable Machine</p>
+    </div>
+  </footer>
 
   <script type="text/javascript">
-    // Останалите функции остават същите, освен следните промени:
+    const URL = "./"; // ако model.json и metadata.json са в същата папка
+    let model, webcam;
+    let lastCapture = null;
+    let dailyGoal = 2000; // Default daily calorie goal
+    let currentLanguage = 'en'; // 'en' or 'bg'
+
+    // Load saved data from localStorage
+    let foodHistory = JSON.parse(localStorage.getItem('foodHistory')) || [];
+    let dailyCalories = JSON.parse(localStorage.getItem('dailyCalories')) || {
+      total: 0,
+      foods: [],
+      date: new Date().toDateString()
+    };
+
+    // Check if it's a new day
+    if (dailyCalories.date !== new Date().toDateString()) {
+      dailyCalories = {
+        total: 0,
+        foods: [],
+        date: new Date().toDateString()
+      };
+      saveDailyCalories();
+    }
+
+    const foodDatabase = {
+      "Egg": {
+        name: {
+          en: "Egg",
+          bg: "Яйце"
+        },
+        calories: 155,
+        carbs: 1.1,
+        protein: 13,
+        fat: 11,
+        benefits: {
+          en: [
+            "High-quality protein source",
+            "Contains choline for brain health",
+            "Rich in antioxidants lutein and zeaxanthin",
+            "Good source of vitamin D"
+          ],
+          bg: [
+            "Източник на висококачествен протеин",
+            "Съдържа холин за здравето на мозъка",
+            "Богат на антиоксиданти лутеин и зеаксантин",
+            "Добър източник на витамин D"
+          ]
+        }
+      },
+      "Tomato": {
+        name: {
+          en: "Tomato",
+          bg: "Домат"
+        },
+        calories: 18,
+        carbs: 3.9,
+        protein: 0.9,
+        fat: 0.2,
+        benefits: {
+          en: [
+            "Rich in lycopene (powerful antioxidant)",
+            "Supports heart health",
+            "May reduce cancer risk",
+            "Good source of vitamin C and potassium"
+          ],
+          bg: [
+            "Богат на ликопен (мощен антиоксидант)",
+            "Подпомага сърдечното здраве",
+            "Може да намали риска от рак",
+            "Добър източник на витамин C и калий"
+          ]
+        }
+      },
+      "Onion": {
+        name: {
+          en: "Onion",
+          bg: "Лук"
+        },
+        calories: 40,
+        carbs: 9.3,
+        protein: 1.1,
+        fat: 0.1,
+        benefits: {
+          en: [
+            "Contains antioxidants and anti-inflammatory compounds",
+            "May boost heart health",
+            "Supports bone density",
+            "Contains prebiotics for gut health"
+          ],
+          bg: [
+            "Съдържа антиоксиданти и противовъзпалителни съединения",
+            "Може да подобри сърдечното здраве",
+            "Подпомага плътността на костите",
+            "Съдържа пребиотици за здравето на червата"
+          ]
+        }
+      },
+      "Banana": {
+        name: {
+          en: "Banana",
+          bg: "Банан"
+        },
+        calories: 89,
+        carbs: 22.8,
+        protein: 1.1,
+        fat: 0.3,
+        benefits: {
+          en: [
+            "Excellent source of potassium",
+            "Supports heart health and blood pressure",
+            "Contains pectin for digestion",
+            "Natural energy booster"
+          ],
+          bg: [
+            "Отличен източник на калий",
+            "Подпомага сърдечното здраве и кръвното налягане",
+            "Съдържа пектин за храносмилането",
+            "Естествен енергиен бустер"
+          ]
+        }
+      },
+      "Orange": {
+        name: {
+          en: "Orange",
+          bg: "Портокал"
+        },
+        calories: 47,
+        carbs: 11.8,
+        protein: 0.9,
+        fat: 0.1,
+        benefits: {
+          en: [
+            "High in vitamin C (immune support)",
+            "Good source of fiber",
+            "Contains flavonoids with anti-inflammatory effects",
+            "May help prevent kidney stones"
+          ],
+          bg: [
+            "Богат на витамин C (поддържа имунната система)",
+            "Добър източник на фибри",
+            "Съдържа флавоноиди с противовъзпалителен ефект",
+            "Може да помогне за предотвратяване на бъбречни камъни"
+          ]
+        }
+      },
+      "Carrot": {
+        name: {
+          en: "Carrot",
+          bg: "Морков"
+        },
+        calories: 41,
+        carbs: 9.6,
+        protein: 0.9,
+        fat: 0.2,
+        benefits: {
+          en: [
+            "Excellent source of beta-carotene (vitamin A)",
+            "Supports eye health",
+            "May reduce cancer risk",
+            "Promotes healthy skin"
+          ],
+          bg: [
+            "Отличен източник на бета-каротин (витамин А)",
+            "Подпомага зрението",
+            "Може да намали риска от рак",
+            "Подпомага здравето на кожата"
+          ]
+        }
+      },
+      "Cucumber": {
+        name: {
+          en: "Cucumber",
+          bg: "Краставица"
+        },
+        calories: 16,
+        carbs: 3.6,
+        protein: 0.7,
+        fat: 0.1,
+        benefits: {
+          en: [
+            "High water content for hydration",
+            "Contains antioxidants like flavonoids",
+            "May help lower blood sugar",
+            "Supports skin health (contains silica)"
+          ],
+          bg: [
+            "Високо съдържание на вода за хидратация",
+            "Съдържа антиоксиданти като флавоноиди",
+            "Може да помогне за намаляване на кръвната захар",
+            "Подпомага здравето на кожата (съдържа силиций)"
+          ]
+        }
+      },
+      "Pepper": {
+        name: {
+          en: "Pepper",
+          bg: "Пипер"
+        },
+        calories: 20,
+        carbs: 4.6,
+        protein: 0.9,
+        fat: 0.2,
+        benefits: {
+          en: [
+            "Extremely high in vitamin C",
+            "Contains capsaicin (may boost metabolism)",
+            "Supports eye health",
+            "May reduce cancer risk"
+          ],
+          bg: [
+            "Изключително богат на витамин C",
+            "Съдържа капсаицин (може да ускори метаболизма)",
+            "Подпомага зрението",
+            "Може да намали риска от рак"
+          ]
+        }
+      },
+      "Apricot": {
+        name: {
+          en: "Apricot",
+          bg: "Кайсия"
+        },
+        calories: 48,
+        carbs: 11.1,
+        protein: 1.4,
+        fat: 0.4,
+        benefits: {
+          en: [
+            "Rich in beta-carotene and vitamin A",
+            "Good source of fiber",
+            "Contains antioxidants for skin health",
+            "May support eye health"
+          ],
+          bg: [
+            "Богат на бета-каротин и витамин А",
+            "Добър източник на фибри",
+            "Съдържа антиоксиданти за здравето на кожата",
+            "Може да подпомага зрението"
+          ]
+        }
+      },
+      "Eggplant": {
+        name: {
+          en: "Eggplant",
+          bg: "Патладжан"
+        },
+        calories: 25,
+        carbs: 5.9,
+        protein: 1,
+        fat: 0.2,
+        benefits: {
+          en: [
+            "Contains nasunin (powerful antioxidant)",
+            "May support heart health",
+            "Good source of fiber",
+            "Low-calorie food for weight management"
+          ],
+          bg: [
+            "Съдържа насунин (мощен антиоксидант)",
+            "Може да подпомага сърдечното здраве",
+            "Добър източник на фибри",
+            "Нискокалорична храна за управление на теглото"
+          ]
+        }
+      },
+      "Apple": {
+        name: {
+          en: "Apple",
+          bg: "Ябълка"
+        },
+        calories: 52,
+        carbs: 13.8,
+        protein: 0.3,
+        fat: 0.2,
+        benefits: {
+          en: [
+            "High in fiber (supports digestion)",
+            "Contains quercetin (anti-inflammatory)",
+            "May support heart health",
+            "Polyphenols may help prevent diabetes"
+          ],
+          bg: [
+            "Богат на фибри (подпомага храносмилането)",
+            "Съдържа кверцетин (противовъзпалителен)",
+            "Може да подпомага сърдечното здраве",
+            "Полифенолите могат да помогнат за предотвратяване на диабет"
+          ]
+        }
+      },
+      "Lukanka": {
+        name: {
+          en: "Lukanka",
+          bg: "Луканка"
+        },
+        calories: 450,
+        carbs: 2,
+        protein: 25,
+        fat: 38,
+        benefits: {
+          en: [
+            "High protein content",
+            "Source of iron and zinc",
+            "Contains B vitamins",
+            "Long-lasting energy source (use in moderation)"
+          ],
+          bg: [
+            "Високо съдържание на протеин",
+            "Източник на желязо и цинк",
+            "Съдържа витамини от група B",
+            "Източник на енергия с продължителен ефект (използвайте умерено)"
+          ]
+        }
+      }
+    };
+
+    // Recipe database
+    const recipeDatabase = {
+      "Eggplant Tomato": {
+        name: {
+          en: "Eggplant and Tomato Stew",
+          bg: "Яхния от патладжан и домати"
+        },
+        ingredients: {
+          en: ["Eggplant", "Tomato", "Onion", "Garlic", "Oil", "Spices"],
+          bg: ["Патладжан", "Домат", "Лук", "Чесън", "Олио", "Подправки"]
+        },
+        description: {
+          en: "A traditional Balkan dish with eggplant and tomatoes, perfect with bread.",
+          bg: "Традиционно балканско ястие с патладжан и домати, идеално с хляб."
+        },
+        link: {
+          en: "https://example.com/eggplant-tomato-stew",
+          bg: "https://example.com/yahniya-patladjan-domat"
+        }
+      },
+      "Eggplant Tomato Pepper": {
+        name: {
+          en: "Traditional Gyuvetch",
+          bg: "Традиционен гювеч"
+        },
+        ingredients: {
+          en: ["Eggplant", "Tomato", "Pepper", "Onion", "Oil", "Egg"],
+          bg: ["Патладжан", "Домат", "Пипер", "Лук", "Олио", "Яйце"]
+        },
+        description: {
+          en: "Classic Bulgarian gyuvetch with roasted vegetables and egg on top.",
+          bg: "Класически български гювеч с печени зеленчуци и яйце отгоре."
+        },
+        link: {
+          en: "https://example.com/traditional-gyuvetch",
+          bg: "https://example.com/tradicionen-gyuvech"
+        }
+      },
+      "Tomato Cucumber": {
+        name: {
+          en: "Shopska Salad",
+          bg: "Шопска салата"
+        },
+        ingredients: {
+          en: ["Tomato", "Cucumber", "Pepper", "Onion", "Cheese"],
+          bg: ["Домат", "Краставица", "Пипер", "Лук", "Сирене"]
+        },
+        description: {
+          en: "The most famous Bulgarian salad with fresh vegetables and white cheese.",
+          bg: "Най-известната българска салата със свежи зеленчуци и бяло сирене."
+        },
+        link: {
+          en: "https://example.com/shopska-salad",
+          bg: "https://example.com/shopska-salat"
+        }
+      },
+      "Tomato Onion Pepper": {
+        name: {
+          en: "Traditional Lyutenitsa",
+          bg: "Традиционна лютеница"
+        },
+        ingredients: {
+          en: ["Tomato", "Pepper", "Onion", "Oil", "Sugar", "Salt"],
+          bg: ["Домат", "Пипер", "Лук", "Олио", "Захар", "Сол"]
+        },
+        description: {
+          en: "Classic Bulgarian spread made from roasted peppers and tomatoes.",
+          bg: "Класическо българско намазнично от печени чушки и домати."
+        },
+        link: {
+          en: "https://example.com/traditional-lyutenitsa",
+          bg: "https://example.com/tradicionna-lyutenitsa"
+        }
+      },
+      "Carrot Onion": {
+        name: {
+          en: "Carrot and Onion Salad",
+          bg: "Салата от морков и лук"
+        },
+        ingredients: {
+          en: ["Carrot", "Onion", "Oil", "Vinegar", "Sugar"],
+          bg: ["Морков", "Лук", "Олио", "Оцет", "Захар"]
+        },
+        description: {
+          en: "Simple and healthy salad with grated carrots and onions.",
+          bg: "Проста и здравословна салата с настърган морков и лук."
+        },
+        link: {
+          en: "https://example.com/carrot-onion-salad",
+          bg: "https://example.com/salata-morkov-luk"
+        }
+      }
+    };
+
+    async function init() {
+      try {
+        // Load daily goal from localStorage if exists
+        const savedGoal = localStorage.getItem('dailyGoal');
+        if (savedGoal) {
+          dailyGoal = parseInt(savedGoal);
+        }
+
+        // Load language preference
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage) {
+          currentLanguage = savedLanguage;
+          updateLanguageDisplay();
+        }
+
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // Load the model
+        model = await tmImage.load(modelURL, metadataURL);
+        
+        // Setup webcam
+        webcam = new tmImage.Webcam(400, 400, true); // увеличен размер за по-добра визия
+        await webcam.setup();
+        await webcam.play();
+        
+        // Hide loading spinner and show webcam
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        
+        // Start prediction loop
+        window.requestAnimationFrame(loop);
+        
+        // Setup event listeners
+        document.getElementById("capture-btn").addEventListener("click", captureFood);
+        document.getElementById("info-btn").addEventListener("click", showInfo);
+        document.getElementById("clear-history-btn").addEventListener("click", clearHistory);
+        document.getElementById("set-goal-btn").addEventListener("click", setDailyGoal);
+        document.getElementById("translate-btn").addEventListener("click", toggleLanguage);
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', switchTab);
+        });
+        
+        // Load history and daily summary
+        updateHistoryList();
+        updateDailySummary();
+        updateRecipeSuggestions();
+        
+      } catch (error) {
+        console.error("Error initializing:", error);
+        document.getElementById("loading").innerHTML = `
+          <div style="color: var(--danger);">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p class="en">Error loading model or camera. Please refresh and allow camera access.</p>
+            <p class="bg hidden">Грешка при зареждане на модела или камерата. Моля, опреснете и разреши достъп до камерата.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Language functions
+    function toggleLanguage() {
+      currentLanguage = currentLanguage === 'en' ? 'bg' : 'en';
+      localStorage.setItem('language', currentLanguage);
+      updateLanguageDisplay();
+      if (lastCapture) updateFoodInfo(lastCapture); // Refresh food info with new language
+      updateHistoryList(); // Refresh history with new language
+      updateDailySummary(); // Refresh daily summary with new language
+      updateRecipeSuggestions(); // Refresh recipes with new language
+    }
+
+    function updateLanguageDisplay() {
+      // Hide all language elements
+      document.querySelectorAll('.en, .bg').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Show elements for current language
+      document.querySelectorAll(`.${currentLanguage}`).forEach(el => {
+        el.classList.remove('hidden');
+      });
+      
+      // Special handling for elements with both classes
+      document.querySelectorAll('#result.en, #result.bg').forEach(el => {
+        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
+      });
+    }
+
+    async function loop() {
+      if (webcam) {
+        webcam.update();
+        if (!lastCapture) { // Only predict in real-time if no capture was taken
+          await predict();
+        }
+      }
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+      if (!model || !webcam) return;
+      
+      const prediction = await model.predict(webcam.canvas);
+      const top = prediction.sort((a, b) => b.probability - a.probability)[0];
+      
+      // Only update if confidence is high enough
+      if (top.probability > 0.7) {
+        updateFoodInfo(top.className);
+      }
+    }
+
+    function updateFoodInfo(foodName) {
+      const foodData = foodDatabase[foodName] || {
+        name: {
+          en: "Unknown",
+          bg: "Непознат"
+        },
+        calories: "?",
+        carbs: "--",
+        protein: "--",
+        fat: "--",
+        benefits: {
+          en: ["No information available for this food"],
+          bg: ["Няма налична информация за тази храна"]
+        }
+      };
+      
+      // Update basic info
+      document.getElementById("food-name").innerHTML = `<i class="fas fa-${getFoodIcon(foodName)}"></i> ${foodData.name[currentLanguage]}`;
+      document.getElementById("calories").textContent = foodData.calories;
+      document.getElementById("carbs").textContent = foodData.carbs;
+      document.getElementById("protein").textContent = foodData.protein;
+      document.getElementById("fat").textContent = foodData.fat;
+      
+      // Update benefits list
+      const benefitsList = document.getElementById("benefits-list");
+      benefitsList.innerHTML = "";
+      foodData.benefits[currentLanguage].forEach(benefit => {
+        const li = document.createElement("li");
+        li.innerHTML = `<i class="fas fa-check"></i> ${benefit}`;
+        benefitsList.appendChild(li);
+      });
+      
+      // Update result display
+      const resultElements = document.querySelectorAll('#result');
+      resultElements.forEach(el => {
+        el.innerHTML = `
+          <span style="color: var(--primary-dark);">${foodData.name[currentLanguage]}</span>
+          <span style="font-size: 1rem; color: #666;">~${foodData.calories} kcal/100g</span>
+        `;
+        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
+      });
+    }
+
+    function getFoodIcon(foodName) {
+      const icons = {
+        "Egg": "egg",
+        "Tomato": "apple-alt",
+        "Onion": "onion",
+        "Banana": "banana",
+        "Orange": "orange",
+        "Carrot": "carrot",
+        "Cucumber": "leaf",
+        "Pepper": "pepper-hot",
+        "Apricot": "apple-alt",
+        "Eggplant": "eggplant",
+        "Apple": "apple-alt",
+        "Lukanka": "drumstick-bite"
+      };
+      return icons[foodName] || "utensils";
+    }
+
+    async function captureFood() {
+      if (!webcam) return;
+      
+      // Show a flash effect
+      const canvas = webcam.canvas;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Wait a moment for the flash
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Predict on the current frame
+      const prediction = await model.predict(canvas);
+      const top = prediction.sort((a, b) => b.probability - a.probability)[0];
+      
+      // Store the capture and update info
+      lastCapture = top.className;
+      updateFoodInfo(lastCapture);
+      
+      // Add to history
+      addToHistory(lastCapture);
+      
+      // Add to daily calories
+      addToDailyCalories(lastCapture);
+      
+      // Show confirmation
+      const resultElements = document.querySelectorAll('#result');
+      resultElements.forEach(el => {
+        el.innerHTML = `
+          <span style="color: var(--primary);"><i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'Captured:' : 'Снимано:'}</span>
+          <span style="color: var(--primary-dark);"> ${foodDatabase[lastCapture]?.name[currentLanguage] || lastCapture}</span>
+        `;
+        el.style.display = el.classList.contains(currentLanguage) ? 'block' : 'none';
+      });
+      
+      // Update recipe suggestions
+      updateRecipeSuggestions();
+    }
+
+    function addToHistory(foodName) {
+      const foodData = foodDatabase[foodName];
+      if (!foodData) return;
+      
+      const historyItem = {
+        name: foodName,
+        displayName: foodData.name[currentLanguage],
+        calories: foodData.calories,
+        time: new Date().toLocaleTimeString(),
+        timestamp: new Date().getTime()
+      };
+      
+      // Add to beginning of array (newest first)
+      foodHistory.unshift(historyItem);
+      
+      // Keep only last 20 items
+      if (foodHistory.length > 20) {
+        foodHistory = foodHistory.slice(0, 20);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+      
+      // Update the history list
+      updateHistoryList();
+    }
+
+    function updateHistoryList() {
+      const historyList = document.getElementById("history-list");
+      historyList.innerHTML = "";
+      
+      if (foodHistory.length === 0) {
+        historyList.innerHTML = `<li style="text-align: center; padding: 1rem; color: #666;">${currentLanguage === 'en' ? 'No food scanned yet' : 'Все още няма сканирана храна'}</li>`;
+        return;
+      }
+      
+      foodHistory.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "history-item";
+        li.innerHTML = `
+          <div class="history-item-info">
+            <i class="fas fa-${getFoodIcon(item.name)} history-item-icon"></i>
+            <div>
+              <div>${foodDatabase[item.name]?.name[currentLanguage] || item.name}</div>
+              <div class="history-item-time">${item.time}</div>
+            </div>
+          </div>
+          <div class="history-item-calories">${item.calories} kcal</div>
+          <i class="fas fa-times history-item-delete" data-id="${item.timestamp}"></i>
+        `;
+        historyList.appendChild(li);
+      });
+      
+      // Add event listeners to delete buttons
+      document.querySelectorAll('.history-item-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const timestamp = parseInt(this.getAttribute('data-id'));
+          deleteHistoryItem(timestamp);
+        });
+      });
+    }
+
+    function deleteHistoryItem(timestamp) {
+      foodHistory = foodHistory.filter(item => item.timestamp !== timestamp);
+      localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+      updateHistoryList();
+      updateDailySummary();
+      updateRecipeSuggestions();
+    }
+
+    function clearHistory() {
+      const confirmMessage = currentLanguage === 'en' 
+        ? "Are you sure you want to clear your food history?" 
+        : "Сигурни ли сте, че искате да изчистите историята на храните?";
+      
+      if (confirm(confirmMessage)) {
+        foodHistory = [];
+        localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+        updateHistoryList();
+        updateDailySummary();
+        updateRecipeSuggestions();
+      }
+    }
+
+    function addToDailyCalories(foodName) {
+      const foodData = foodDatabase[foodName];
+      if (!foodData) return;
+      
+      // Check if we need to reset for a new day
+      if (dailyCalories.date !== new Date().toDateString()) {
+        dailyCalories = {
+          total: 0,
+          foods: [],
+          date: new Date().toDateString()
+        };
+      }
+      
+      dailyCalories.total += foodData.calories;
+      dailyCalories.foods.push({
+        name: foodName,
+        displayName: foodData.name[currentLanguage],
+        calories: foodData.calories,
+        carbs: foodData.carbs,
+        protein: foodData.protein,
+        fat: foodData.fat,
+        time: new Date().toLocaleTimeString()
+      });
+      
+      saveDailyCalories();
+      updateDailySummary();
+    }
+
+    function saveDailyCalories() {
+      localStorage.setItem('dailyCalories', JSON.stringify(dailyCalories));
+    }
+
+    function updateDailySummary() {
+      document.getElementById("total-foods").textContent = dailyCalories.foods.length;
+      document.getElementById("total-calories").textContent = dailyCalories.total;
+      
+      // Calculate totals
+      const totals = dailyCalories.foods.reduce((acc, food) => {
+        acc.protein += food.protein;
+        acc.carbs += food.carbs;
+        acc.fat += food.fat;
+        return acc;
+      }, { protein: 0, carbs: 0, fat: 0 });
+      
+      document.getElementById("total-protein").textContent = totals.protein.toFixed(1) + " g";
+      document.getElementById("total-carbs").textContent = totals.carbs.toFixed(1) + " g";
+      document.getElementById("total-fat").textContent = totals.fat.toFixed(1) + " g";
+      
+      // Calculate progress toward daily goal
+      const progress = Math.min(Math.round((dailyCalories.total / dailyGoal) * 100), 100);
+      document.getElementById("calorie-progress").textContent = `${progress}%`;
+      
+      // Change color based on progress
+      const progressElement = document.getElementById("calorie-progress");
+      if (progress > 90) {
+        progressElement.style.color = "var(--danger)";
+      } else if (progress > 70) {
+        progressElement.style.color = "var(--secondary)";
+      } else {
+        progressElement.style.color = "var(--primary)";
+      }
+    }
+
+    function setDailyGoal() {
+      const promptMessage = currentLanguage === 'en' 
+        ? "Enter your daily calorie goal:" 
+        : "Въведете дневната си калорична цел:";
+      
+      const newGoal = prompt(promptMessage, dailyGoal);
+      if (newGoal && !isNaN(newGoal)) {
+        dailyGoal = parseInt(newGoal);
+        localStorage.setItem('dailyGoal', dailyGoal);
+        updateDailySummary();
+      }
+    }
 
     function switchTab(e) {
       // Remove active class from all tabs
@@ -16,7 +1416,7 @@
       });
       
       // Add active class to clicked tab
-      e.currentTarget.classList.add('active');
+      e.target.classList.add('active');
       
       // Hide all tab contents
       document.querySelectorAll('.tab-content').forEach(content => {
@@ -24,27 +1424,112 @@
       });
       
       // Show the corresponding tab content
-      const tabId = e.currentTarget.getAttribute('data-tab');
+      const tabId = e.target.getAttribute('data-tab');
       document.getElementById(`${tabId}-tab`).classList.add('active');
     }
 
-    async function init() {
-      try {
-        // Останалия код в init() остава същия
-
-        // Tab switching - променен event listener
-        document.querySelectorAll('.tab').forEach(tab => {
-          tab.addEventListener('click', function(e) {
-            switchTab(e);
-          });
-        });
-        
-      } catch (error) {
-        console.error("Error initializing:", error);
-      }
+    function showInfo() {
+      const message = currentLanguage === 'en' 
+        ? "How to use NutriVision:\n\n1. Point your camera at a food item\n2. The app will automatically recognize it\n3. See nutritional information and health benefits\n4. Press 'Capture' to freeze the analysis and save to history\n\nAll your scanned foods are saved in the history tab, and daily totals are calculated automatically."
+        : "Как да използвате NutriVision:\n\n1. Насочете камерата си към храна\n2. Приложението автоматично ще я разпознае\n3. Вижте хранителна информация и ползи за здравето\n4. Натиснете 'Снимай', за да запазите анализа и да го запишете в историята\n\nВсички сканирани храни се записват в раздела история и дневните суми се изчисляват автоматично.";
+      
+      alert(message);
     }
 
-    // Останалите функции остават същите
+    function updateRecipeSuggestions() {
+      const recipeContainer = document.getElementById("recipe-suggestions");
+      recipeContainer.innerHTML = "";
+      
+      // Get unique recently scanned vegetables/fruits (last 5 items)
+      const recentScans = [...new Set(foodHistory.slice(0, 5).map(item => item.name))];
+      
+      if (recentScans.length === 0) {
+        recipeContainer.innerHTML = `
+          <p class="${currentLanguage}">${currentLanguage === 'en' 
+            ? 'Scan some vegetables or fruits to get recipe suggestions.' 
+            : 'Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.'}</p>
+        `;
+        return;
+      }
+      
+      // Find matching recipes
+      const matchingRecipes = findMatchingRecipes(recentScans);
+      
+      if (matchingRecipes.length === 0) {
+        recipeContainer.innerHTML = `
+          <p class="${currentLanguage}">${currentLanguage === 'en' 
+            ? 'No recipes found for your recently scanned items. Try scanning more vegetables.' 
+            : 'Не са намерени рецепти за скоро сканираните продукти. Опитайте да сканирате повече зеленчуци.'}</p>
+        `;
+        return;
+      }
+      
+      // Display matching recipes
+      matchingRecipes.forEach(recipeKey => {
+        const recipe = recipeDatabase[recipeKey];
+        if (!recipe) return;
+        
+        const recipeCard = document.createElement("div");
+        recipeCard.className = "recipe-card";
+        recipeCard.innerHTML = `
+          <div class="recipe-title">
+            <i class="fas fa-utensils"></i>
+            ${recipe.name[currentLanguage]}
+          </div>
+          <div class="recipe-ingredients">
+            <strong>${currentLanguage === 'en' ? 'Ingredients:' : 'Съставки:'}</strong>
+            ${recipe.ingredients[currentLanguage].join(", ")}
+          </div>
+          <div class="recipe-description">
+            ${recipe.description[currentLanguage]}
+          </div>
+          <a href="${recipe.link[currentLanguage]}" target="_blank" class="recipe-link">
+            ${currentLanguage === 'en' ? 'View recipe' : 'Виж рецепта'}
+            <i class="fas fa-external-link-alt"></i>
+          </a>
+        `;
+        recipeContainer.appendChild(recipeCard);
+      });
+    }
+
+    function findMatchingRecipes(scannedItems) {
+      // Sort scanned items alphabetically for consistent matching
+      const sortedItems = [...scannedItems].sort();
+      
+      // Try to find exact matches with 2-3 items
+      const possibleCombinations = [];
+      
+      // Check all possible 2-item combinations
+      for (let i = 0; i < sortedItems.length; i++) {
+        for (let j = i + 1; j < sortedItems.length; j++) {
+          const combo = [sortedItems[i], sortedItems[j]].sort().join(" ");
+          possibleCombinations.push(combo);
+        }
+      }
+      
+      // Check all possible 3-item combinations
+      for (let i = 0; i < sortedItems.length; i++) {
+        for (let j = i + 1; j < sortedItems.length; j++) {
+          for (let k = j + 1; k < sortedItems.length; k++) {
+            const combo = [sortedItems[i], sortedItems[j], sortedItems[k]].sort().join(" ");
+            possibleCombinations.push(combo);
+          }
+        }
+      }
+      
+      // Find matching recipes
+      const matchingRecipes = [];
+      possibleCombinations.forEach(combo => {
+        if (recipeDatabase[combo] && !matchingRecipes.includes(combo)) {
+          matchingRecipes.push(combo);
+        }
+      });
+      
+      return matchingRecipes;
+    }
+
+    // Initialize the app
+    init();
   </script>
 </body>
 </html>
