@@ -1249,6 +1249,12 @@
       
       // Update recipe suggestions
       updateRecipeSuggestions();
+      
+      // Reset lastCapture after 2 seconds to continue recognition
+      setTimeout(() => {
+        lastCapture = null;
+        document.getElementById("result").innerHTML = currentLanguage === 'en' ? 'Ready to analyze' : 'Готов за анализ';
+      }, 2000);
     }
 
     function addToHistory(foodName) {
