@@ -51,6 +51,31 @@
       border-radius: 0 0 20px 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .language-switcher {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    
+    .btn-language {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s;
+    }
+    
+    .btn-language:hover {
+      background: rgba(255,255,255,0.3);
     }
     
     h1 {
@@ -370,6 +395,47 @@
       display: block;
     }
     
+    /* Recipe suggestions */
+    .recipe-suggestions {
+      margin-top: 1.5rem;
+    }
+    
+    .recipe-card {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .recipe-title {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .recipe-ingredients {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    
+    .recipe-link {
+      color: var(--primary);
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    
+    .recipe-link:hover {
+      text-decoration: underline;
+    }
+    
     /* Scrollbar styles */
     ::-webkit-scrollbar {
       width: 8px;
@@ -388,13 +454,30 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #aaa;
     }
+    
+    /* Translation styles */
+    body.bg {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="container">
-      <h1><i class="fas fa-utensils"></i> NutriVision</h1>
-      <p class="subtitle">Smart food recognition with nutritional analysis</p>
+      <div class="language-switcher">
+        <button class="btn-language" id="translate-btn">
+          <i class="fas fa-language"></i>
+          <span class="en">Български</span>
+          <span class="bg hidden">English</span>
+        </button>
+      </div>
+      <h1><i class="fas fa-utensils"></i> <span class="en">NutriVision</span><span class="bg hidden">НутроВизия</span></h1>
+      <p class="subtitle en">Smart food recognition with nutritional analysis</p>
+      <p class="subtitle bg hidden">Интелигентно разпознаване на храна с хранителен анализ</p>
     </div>
   </header>
 
@@ -405,28 +488,32 @@
           <div id="webcam-container">
             <div class="loading" id="loading">
               <div class="spinner"></div>
-              <p>Loading camera and model...</p>
+              <p class="en">Loading camera and model...</p>
+              <p class="bg hidden">Зареждане на камера и модел...</p>
             </div>
-            <div class="webcam-overlay">Point your camera at food to analyze</div>
+            <div class="webcam-overlay en">Point your camera at food to analyze</div>
+            <div class="webcam-overlay bg hidden">Насочете камерата си към храна за анализ</div>
           </div>
-          <div id="result">Ready to analyze</div>
+          <div id="result" class="en">Ready to analyze</div>
+          <div id="result" class="bg hidden">Готов за анализ</div>
           <div class="action-buttons">
-            <button class="btn" id="capture-btn"><i class="fas fa-camera"></i> Capture</button>
-            <button class="btn btn-secondary" id="info-btn"><i class="fas fa-info-circle"></i> How It Works</button>
+            <button class="btn" id="capture-btn"><i class="fas fa-camera"></i> <span class="en">Capture</span><span class="bg hidden">Снимай</span></button>
+            <button class="btn btn-secondary" id="info-btn"><i class="fas fa-info-circle"></i> <span class="en">How It Works</span><span class="bg hidden">Как работи</span></button>
           </div>
         </div>
         
         <!-- New History Section -->
         <div class="card history-section">
           <div class="tabs">
-            <div class="tab active" data-tab="history">Food History</div>
-            <div class="tab" data-tab="daily">Daily Summary</div>
+            <div class="tab active" data-tab="history"><span class="en">Food History</span><span class="bg hidden">История</span></div>
+            <div class="tab" data-tab="daily"><span class="en">Daily Summary</span><span class="bg hidden">Дневен преглед</span></div>
+            <div class="tab" data-tab="recipes"><span class="en">Recipes</span><span class="bg hidden">Рецепти</span></div>
           </div>
           
           <div class="tab-content active" id="history-tab">
             <div class="history-title">
-              <h3><i class="fas fa-history"></i> Recently Scanned</h3>
-              <button class="btn btn-danger" id="clear-history-btn"><i class="fas fa-trash"></i> Clear</button>
+              <h3><i class="fas fa-history"></i> <span class="en">Recently Scanned</span><span class="bg hidden">Скоро сканирани</span></h3>
+              <button class="btn btn-danger" id="clear-history-btn"><i class="fas fa-trash"></i> <span class="en">Clear</span><span class="bg hidden">Изчисти</span></button>
             </div>
             <ul class="history-list" id="history-list">
               <!-- History items will be added here -->
@@ -434,35 +521,51 @@
           </div>
           
           <div class="tab-content" id="daily-tab">
-            <h3><i class="fas fa-chart-pie"></i> Today's Nutrition</h3>
+            <h3><i class="fas fa-chart-pie"></i> <span class="en">Today's Nutrition</span><span class="bg hidden">Дневна хранителна стойност</span></h3>
             <div class="daily-summary">
               <div class="daily-summary-item">
-                <span>Total Foods:</span>
+                <span class="en">Total Foods:</span>
+                <span class="bg hidden">Общо храни:</span>
                 <span id="total-foods">0</span>
               </div>
               <div class="daily-summary-item">
-                <span>Total Calories:</span>
+                <span class="en">Total Calories:</span>
+                <span class="bg hidden">Общо калории:</span>
                 <span id="total-calories">0</span>
               </div>
               <div class="daily-summary-item">
-                <span>Total Protein:</span>
+                <span class="en">Total Protein:</span>
+                <span class="bg hidden">Общо протеин:</span>
                 <span id="total-protein">0 g</span>
               </div>
               <div class="daily-summary-item">
-                <span>Total Carbs:</span>
+                <span class="en">Total Carbs:</span>
+                <span class="bg hidden">Общо въглехидрати:</span>
                 <span id="total-carbs">0 g</span>
               </div>
               <div class="daily-summary-item">
-                <span>Total Fat:</span>
+                <span class="en">Total Fat:</span>
+                <span class="bg hidden">Общо мазнини:</span>
                 <span id="total-fat">0 g</span>
               </div>
               <div class="daily-summary-item daily-summary-total">
-                <span>Daily Goal Progress:</span>
+                <span class="en">Daily Goal Progress:</span>
+                <span class="bg hidden">Дневна цел:</span>
                 <span id="calorie-progress">0%</span>
               </div>
             </div>
             <div class="action-buttons" style="margin-top: 1rem;">
-              <button class="btn btn-secondary" id="set-goal-btn"><i class="fas fa-bullseye"></i> Set Daily Goal</button>
+              <button class="btn btn-secondary" id="set-goal-btn"><i class="fas fa-bullseye"></i> <span class="en">Set Daily Goal</span><span class="bg hidden">Задай дневна цел</span></button>
+            </div>
+          </div>
+          
+          <div class="tab-content" id="recipes-tab">
+            <h3><i class="fas fa-utensils"></i> <span class="en">Recipe Suggestions</span><span class="bg hidden">Предложени рецепти</span></h3>
+            <p class="en">Based on your recently scanned vegetables and fruits:</p>
+            <p class="bg hidden">Въз основа на скоро сканираните зеленчуци и плодове:</p>
+            <div class="recipe-suggestions" id="recipe-suggestions">
+              <p class="en">Scan some vegetables or fruits to get recipe suggestions.</p>
+              <p class="bg hidden">Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.</p>
             </div>
           </div>
         </div>
@@ -470,41 +573,45 @@
       
       <div class="info-section">
         <div class="card">
-          <h2 id="food-name">Food Information</h2>
+          <h2 id="food-name"><span class="en">Food Information</span><span class="bg hidden">Информация за храната</span></h2>
           <div class="nutrition-info" id="nutrition-info">
             <div class="nutrition-item">
               <div class="nutrition-value" id="calories">--</div>
-              <div class="nutrition-label">Calories</div>
+              <div class="nutrition-label en">Calories</div>
+              <div class="nutrition-label bg hidden">Калории</div>
             </div>
             <div class="nutrition-item">
               <div class="nutrition-value" id="carbs">--</div>
-              <div class="nutrition-label">Carbs (g)</div>
+              <div class="nutrition-label en">Carbs (g)</div>
+              <div class="nutrition-label bg hidden">Въглехидрати (г)</div>
             </div>
             <div class="nutrition-item">
               <div class="nutrition-value" id="protein">--</div>
-              <div class="nutrition-label">Protein (g)</div>
+              <div class="nutrition-label en">Protein (g)</div>
+              <div class="nutrition-label bg hidden">Протеин (г)</div>
             </div>
             <div class="nutrition-item">
               <div class="nutrition-value" id="fat">--</div>
-              <div class="nutrition-label">Fat (g)</div>
+              <div class="nutrition-label en">Fat (g)</div>
+              <div class="nutrition-label bg hidden">Мазнини (г)</div>
             </div>
           </div>
           
           <div class="health-benefits">
-            <h3 class="benefits-title"><i class="fas fa-heart"></i> Health Benefits</h3>
+            <h3 class="benefits-title"><i class="fas fa-heart"></i> <span class="en">Health Benefits</span><span class="bg hidden">Ползи за здравето</span></h3>
             <ul class="benefits-list" id="benefits-list">
-              <li><i class="fas fa-check"></i> Select a food to see its health benefits</li>
+              <li><i class="fas fa-check"></i> <span class="en">Select a food to see its health benefits</span><span class="bg hidden">Изберете храна, за да видите ползите за здравето</span></li>
             </ul>
           </div>
         </div>
         
         <div class="card" id="tips-card">
-          <h3><i class="fas fa-lightbulb"></i> Nutrition Tips</h3>
+          <h3><i class="fas fa-lightbulb"></i> <span class="en">Nutrition Tips</span><span class="bg hidden">Хранителни съвети</span></h3>
           <ul class="benefits-list" id="nutrition-tips">
-            <li><i class="fas fa-seedling"></i> Eat a variety of colorful fruits and vegetables daily</li>
-            <li><i class="fas fa-glass-whiskey"></i> Stay hydrated with water throughout the day</li>
-            <li><i class="fas fa-bread-slice"></i> Choose whole grains over refined grains</li>
-            <li><i class="fas fa-drumstick-bite"></i> Include lean protein sources in your meals</li>
+            <li><i class="fas fa-seedling"></i> <span class="en">Eat a variety of colorful fruits and vegetables daily</span><span class="bg hidden">Яжте разнообразни цветни плодове и зеленчуци всеки ден</span></li>
+            <li><i class="fas fa-glass-whiskey"></i> <span class="en">Stay hydrated with water throughout the day</span><span class="bg hidden">Поддържайте хидратация с вода през целия ден</span></li>
+            <li><i class="fas fa-bread-slice"></i> <span class="en">Choose whole grains over refined grains</span><span class="bg hidden">Избирайте пълнозърнести продукти пред рафинирани</span></li>
+            <li><i class="fas fa-drumstick-bite"></i> <span class="en">Include lean protein sources in your meals</span><span class="bg hidden">Включвайте храни с ниско съдържание на мазнини в храненията си</span></li>
           </ul>
         </div>
       </div>
@@ -513,7 +620,8 @@
 
   <footer>
     <div class="container">
-      <p>NutriVision helps you make informed food choices by analyzing nutritional content</p>
+      <p class="en">NutriVision helps you make informed food choices by analyzing nutritional content</p>
+      <p class="bg hidden">NutriVision ви помага да правите информиран избор на храна чрез анализ на хранителното съдържание</p>
       <p class="watermark">Powered by TensorFlow.js and Teachable Machine</p>
     </div>
   </footer>
@@ -523,6 +631,7 @@
     let model, webcam;
     let lastCapture = null;
     let dailyGoal = 2000; // Default daily calorie goal
+    let currentLanguage = 'en'; // 'en' or 'bg'
 
     // Load saved data from localStorage
     let foodHistory = JSON.parse(localStorage.getItem('foodHistory')) || [];
@@ -544,148 +653,386 @@
 
     const foodDatabase = {
       "Egg": {
+        name: {
+          en: "Egg",
+          bg: "Яйце"
+        },
         calories: 155,
         carbs: 1.1,
         protein: 13,
         fat: 11,
-        benefits: [
-          "High-quality protein source",
-          "Contains choline for brain health",
-          "Rich in antioxidants lutein and zeaxanthin",
-          "Good source of vitamin D"
-        ]
+        benefits: {
+          en: [
+            "High-quality protein source",
+            "Contains choline for brain health",
+            "Rich in antioxidants lutein and zeaxanthin",
+            "Good source of vitamin D"
+          ],
+          bg: [
+            "Източник на висококачествен протеин",
+            "Съдържа холин за здравето на мозъка",
+            "Богат на антиоксиданти лутеин и зеаксантин",
+            "Добър източник на витамин D"
+          ]
+        }
       },
       "Tomato": {
+        name: {
+          en: "Tomato",
+          bg: "Домат"
+        },
         calories: 18,
         carbs: 3.9,
         protein: 0.9,
         fat: 0.2,
-        benefits: [
-          "Rich in lycopene (powerful antioxidant)",
-          "Supports heart health",
-          "May reduce cancer risk",
-          "Good source of vitamin C and potassium"
-        ]
+        benefits: {
+          en: [
+            "Rich in lycopene (powerful antioxidant)",
+            "Supports heart health",
+            "May reduce cancer risk",
+            "Good source of vitamin C and potassium"
+          ],
+          bg: [
+            "Богат на ликопен (мощен антиоксидант)",
+            "Подпомага сърдечното здраве",
+            "Може да намали риска от рак",
+            "Добър източник на витамин C и калий"
+          ]
+        }
       },
       "Onion": {
+        name: {
+          en: "Onion",
+          bg: "Лук"
+        },
         calories: 40,
         carbs: 9.3,
         protein: 1.1,
         fat: 0.1,
-        benefits: [
-          "Contains antioxidants and anti-inflammatory compounds",
-          "May boost heart health",
-          "Supports bone density",
-          "Contains prebiotics for gut health"
-        ]
+        benefits: {
+          en: [
+            "Contains antioxidants and anti-inflammatory compounds",
+            "May boost heart health",
+            "Supports bone density",
+            "Contains prebiotics for gut health"
+          ],
+          bg: [
+            "Съдържа антиоксиданти и противовъзпалителни съединения",
+            "Може да подобри сърдечното здраве",
+            "Подпомага плътността на костите",
+            "Съдържа пребиотици за здравето на червата"
+          ]
+        }
       },
       "Banana": {
+        name: {
+          en: "Banana",
+          bg: "Банан"
+        },
         calories: 89,
         carbs: 22.8,
         protein: 1.1,
         fat: 0.3,
-        benefits: [
-          "Excellent source of potassium",
-          "Supports heart health and blood pressure",
-          "Contains pectin for digestion",
-          "Natural energy booster"
-        ]
+        benefits: {
+          en: [
+            "Excellent source of potassium",
+            "Supports heart health and blood pressure",
+            "Contains pectin for digestion",
+            "Natural energy booster"
+          ],
+          bg: [
+            "Отличен източник на калий",
+            "Подпомага сърдечното здраве и кръвното налягане",
+            "Съдържа пектин за храносмилането",
+            "Естествен енергиен бустер"
+          ]
+        }
       },
       "Orange": {
+        name: {
+          en: "Orange",
+          bg: "Портокал"
+        },
         calories: 47,
         carbs: 11.8,
         protein: 0.9,
         fat: 0.1,
-        benefits: [
-          "High in vitamin C (immune support)",
-          "Good source of fiber",
-          "Contains flavonoids with anti-inflammatory effects",
-          "May help prevent kidney stones"
-        ]
+        benefits: {
+          en: [
+            "High in vitamin C (immune support)",
+            "Good source of fiber",
+            "Contains flavonoids with anti-inflammatory effects",
+            "May help prevent kidney stones"
+          ],
+          bg: [
+            "Богат на витамин C (поддържа имунната система)",
+            "Добър източник на фибри",
+            "Съдържа флавоноиди с противовъзпалителен ефект",
+            "Може да помогне за предотвратяване на бъбречни камъни"
+          ]
+        }
       },
       "Carrot": {
+        name: {
+          en: "Carrot",
+          bg: "Морков"
+        },
         calories: 41,
         carbs: 9.6,
         protein: 0.9,
         fat: 0.2,
-        benefits: [
-          "Excellent source of beta-carotene (vitamin A)",
-          "Supports eye health",
-          "May reduce cancer risk",
-          "Promotes healthy skin"
-        ]
+        benefits: {
+          en: [
+            "Excellent source of beta-carotene (vitamin A)",
+            "Supports eye health",
+            "May reduce cancer risk",
+            "Promotes healthy skin"
+          ],
+          bg: [
+            "Отличен източник на бета-каротин (витамин А)",
+            "Подпомага зрението",
+            "Може да намали риска от рак",
+            "Подпомага здравето на кожата"
+          ]
+        }
       },
       "Cucumber": {
+        name: {
+          en: "Cucumber",
+          bg: "Краставица"
+        },
         calories: 16,
         carbs: 3.6,
         protein: 0.7,
         fat: 0.1,
-        benefits: [
-          "High water content for hydration",
-          "Contains antioxidants like flavonoids",
-          "May help lower blood sugar",
-          "Supports skin health (contains silica)"
-        ]
+        benefits: {
+          en: [
+            "High water content for hydration",
+            "Contains antioxidants like flavonoids",
+            "May help lower blood sugar",
+            "Supports skin health (contains silica)"
+          ],
+          bg: [
+            "Високо съдържание на вода за хидратация",
+            "Съдържа антиоксиданти като флавоноиди",
+            "Може да помогне за намаляване на кръвната захар",
+            "Подпомага здравето на кожата (съдържа силиций)"
+          ]
+        }
       },
       "Pepper": {
+        name: {
+          en: "Pepper",
+          bg: "Пипер"
+        },
         calories: 20,
         carbs: 4.6,
         protein: 0.9,
         fat: 0.2,
-        benefits: [
-          "Extremely high in vitamin C",
-          "Contains capsaicin (may boost metabolism)",
-          "Supports eye health",
-          "May reduce cancer risk"
-        ]
+        benefits: {
+          en: [
+            "Extremely high in vitamin C",
+            "Contains capsaicin (may boost metabolism)",
+            "Supports eye health",
+            "May reduce cancer risk"
+          ],
+          bg: [
+            "Изключително богат на витамин C",
+            "Съдържа капсаицин (може да ускори метаболизма)",
+            "Подпомага зрението",
+            "Може да намали риска от рак"
+          ]
+        }
       },
       "Apricot": {
+        name: {
+          en: "Apricot",
+          bg: "Кайсия"
+        },
         calories: 48,
         carbs: 11.1,
         protein: 1.4,
         fat: 0.4,
-        benefits: [
-          "Rich in beta-carotene and vitamin A",
-          "Good source of fiber",
-          "Contains antioxidants for skin health",
-          "May support eye health"
-        ]
+        benefits: {
+          en: [
+            "Rich in beta-carotene and vitamin A",
+            "Good source of fiber",
+            "Contains antioxidants for skin health",
+            "May support eye health"
+          ],
+          bg: [
+            "Богат на бета-каротин и витамин А",
+            "Добър източник на фибри",
+            "Съдържа антиоксиданти за здравето на кожата",
+            "Може да подпомага зрението"
+          ]
+        }
       },
       "Eggplant": {
+        name: {
+          en: "Eggplant",
+          bg: "Патладжан"
+        },
         calories: 25,
         carbs: 5.9,
         protein: 1,
         fat: 0.2,
-        benefits: [
-          "Contains nasunin (powerful antioxidant)",
-          "May support heart health",
-          "Good source of fiber",
-          "Low-calorie food for weight management"
-        ]
+        benefits: {
+          en: [
+            "Contains nasunin (powerful antioxidant)",
+            "May support heart health",
+            "Good source of fiber",
+            "Low-calorie food for weight management"
+          ],
+          bg: [
+            "Съдържа насунин (мощен антиоксидант)",
+            "Може да подпомага сърдечното здраве",
+            "Добър източник на фибри",
+            "Нискокалорична храна за управление на теглото"
+          ]
+        }
       },
       "Apple": {
+        name: {
+          en: "Apple",
+          bg: "Ябълка"
+        },
         calories: 52,
         carbs: 13.8,
         protein: 0.3,
         fat: 0.2,
-        benefits: [
-          "High in fiber (supports digestion)",
-          "Contains quercetin (anti-inflammatory)",
-          "May support heart health",
-          "Polyphenols may help prevent diabetes"
-        ]
+        benefits: {
+          en: [
+            "High in fiber (supports digestion)",
+            "Contains quercetin (anti-inflammatory)",
+            "May support heart health",
+            "Polyphenols may help prevent diabetes"
+          ],
+          bg: [
+            "Богат на фибри (подпомага храносмилането)",
+            "Съдържа кверцетин (противовъзпалителен)",
+            "Може да подпомага сърдечното здраве",
+            "Полифенолите могат да помогнат за предотвратяване на диабет"
+          ]
+        }
       },
       "Lukanka": {
+        name: {
+          en: "Lukanka",
+          bg: "Луканка"
+        },
         calories: 450,
         carbs: 2,
         protein: 25,
         fat: 38,
-        benefits: [
-          "High protein content",
-          "Source of iron and zinc",
-          "Contains B vitamins",
-          "Long-lasting energy source (use in moderation)"
-        ]
+        benefits: {
+          en: [
+            "High protein content",
+            "Source of iron and zinc",
+            "Contains B vitamins",
+            "Long-lasting energy source (use in moderation)"
+          ],
+          bg: [
+            "Високо съдържание на протеин",
+            "Източник на желязо и цинк",
+            "Съдържа витамини от група B",
+            "Източник на енергия с продължителен ефект (използвайте умерено)"
+          ]
+        }
+      }
+    };
+
+    // Recipe database
+    const recipeDatabase = {
+      "Eggplant Tomato": {
+        name: {
+          en: "Eggplant and Tomato Stew",
+          bg: "Яхния от патладжан и домати"
+        },
+        ingredients: {
+          en: ["Eggplant", "Tomato", "Onion", "Garlic", "Oil", "Spices"],
+          bg: ["Патладжан", "Домат", "Лук", "Чесън", "Олио", "Подправки"]
+        },
+        description: {
+          en: "A traditional Balkan dish with eggplant and tomatoes, perfect with bread.",
+          bg: "Традиционно балканско ястие с патладжан и домати, идеално с хляб."
+        },
+        link: {
+          en: "https://example.com/eggplant-tomato-stew",
+          bg: "https://example.com/yahniya-patladjan-domat"
+        }
+      },
+      "Eggplant Tomato Pepper": {
+        name: {
+          en: "Traditional Gyuvetch",
+          bg: "Традиционен гювеч"
+        },
+        ingredients: {
+          en: ["Eggplant", "Tomato", "Pepper", "Onion", "Oil", "Egg"],
+          bg: ["Патладжан", "Домат", "Пипер", "Лук", "Олио", "Яйце"]
+        },
+        description: {
+          en: "Classic Bulgarian gyuvetch with roasted vegetables and egg on top.",
+          bg: "Класически български гювеч с печени зеленчуци и яйце отгоре."
+        },
+        link: {
+          en: "https://example.com/traditional-gyuvetch",
+          bg: "https://example.com/tradicionen-gyuvech"
+        }
+      },
+      "Tomato Cucumber": {
+        name: {
+          en: "Shopska Salad",
+          bg: "Шопска салата"
+        },
+        ingredients: {
+          en: ["Tomato", "Cucumber", "Pepper", "Onion", "Cheese"],
+          bg: ["Домат", "Краставица", "Пипер", "Лук", "Сирене"]
+        },
+        description: {
+          en: "The most famous Bulgarian salad with fresh vegetables and white cheese.",
+          bg: "Най-известната българска салата със свежи зеленчуци и бяло сирене."
+        },
+        link: {
+          en: "https://example.com/shopska-salad",
+          bg: "https://example.com/shopska-salat"
+        }
+      },
+      "Tomato Onion Pepper": {
+        name: {
+          en: "Traditional Lyutenitsa",
+          bg: "Традиционна лютеница"
+        },
+        ingredients: {
+          en: ["Tomato", "Pepper", "Onion", "Oil", "Sugar", "Salt"],
+          bg: ["Домат", "Пипер", "Лук", "Олио", "Захар", "Сол"]
+        },
+        description: {
+          en: "Classic Bulgarian spread made from roasted peppers and tomatoes.",
+          bg: "Класическо българско намазнично от печени чушки и домати."
+        },
+        link: {
+          en: "https://example.com/traditional-lyutenitsa",
+          bg: "https://example.com/tradicionna-lyutenitsa"
+        }
+      },
+      "Carrot Onion": {
+        name: {
+          en: "Carrot and Onion Salad",
+          bg: "Салата от морков и лук"
+        },
+        ingredients: {
+          en: ["Carrot", "Onion", "Oil", "Vinegar", "Sugar"],
+          bg: ["Морков", "Лук", "Олио", "Оцет", "Захар"]
+        },
+        description: {
+          en: "Simple and healthy salad with grated carrots and onions.",
+          bg: "Проста и здравословна салата с настърган морков и лук."
+        },
+        link: {
+          en: "https://example.com/carrot-onion-salad",
+          bg: "https://example.com/salata-morkov-luk"
+        }
       }
     };
 
@@ -695,6 +1042,13 @@
         const savedGoal = localStorage.getItem('dailyGoal');
         if (savedGoal) {
           dailyGoal = parseInt(savedGoal);
+        }
+
+        // Load language preference
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage) {
+          currentLanguage = savedLanguage;
+          updateLanguageDisplay();
         }
 
         const modelURL = URL + "model.json";
@@ -720,6 +1074,7 @@
         document.getElementById("info-btn").addEventListener("click", showInfo);
         document.getElementById("clear-history-btn").addEventListener("click", clearHistory);
         document.getElementById("set-goal-btn").addEventListener("click", setDailyGoal);
+        document.getElementById("translate-btn").addEventListener("click", toggleLanguage);
         
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -729,16 +1084,41 @@
         // Load history and daily summary
         updateHistoryList();
         updateDailySummary();
+        updateRecipeSuggestions();
         
       } catch (error) {
         console.error("Error initializing:", error);
         document.getElementById("loading").innerHTML = `
           <div style="color: var(--danger);">
             <i class="fas fa-exclamation-triangle fa-2x"></i>
-            <p>Error loading model or camera. Please refresh and allow camera access.</p>
+            <p class="en">Error loading model or camera. Please refresh and allow camera access.</p>
+            <p class="bg hidden">Грешка при зареждане на модела или камерата. Моля, опреснете и разреши достъп до камерата.</p>
           </div>
         `;
       }
+    }
+
+    // Language functions
+    function toggleLanguage() {
+      currentLanguage = currentLanguage === 'en' ? 'bg' : 'en';
+      localStorage.setItem('language', currentLanguage);
+      updateLanguageDisplay();
+      updateFoodInfo(lastCapture); // Refresh food info with new language
+      updateHistoryList(); // Refresh history with new language
+      updateDailySummary(); // Refresh daily summary with new language
+      updateRecipeSuggestions(); // Refresh recipes with new language
+    }
+
+    function updateLanguageDisplay() {
+      // Hide all language elements
+      document.querySelectorAll('.en, .bg').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Show elements for current language
+      document.querySelectorAll(`.${currentLanguage}`).forEach(el => {
+        el.classList.remove('hidden');
+      });
     }
 
     async function loop() {
@@ -765,15 +1145,22 @@
 
     function updateFoodInfo(foodName) {
       const foodData = foodDatabase[foodName] || {
+        name: {
+          en: "Unknown",
+          bg: "Непознат"
+        },
         calories: "?",
         carbs: "--",
         protein: "--",
         fat: "--",
-        benefits: ["No information available for this food"]
+        benefits: {
+          en: ["No information available for this food"],
+          bg: ["Няма налична информация за тази храна"]
+        }
       };
       
       // Update basic info
-      document.getElementById("food-name").innerHTML = `<i class="fas fa-${getFoodIcon(foodName)}"></i> ${foodName}`;
+      document.getElementById("food-name").innerHTML = `<i class="fas fa-${getFoodIcon(foodName)}"></i> ${foodData.name[currentLanguage]}`;
       document.getElementById("calories").textContent = foodData.calories;
       document.getElementById("carbs").textContent = foodData.carbs;
       document.getElementById("protein").textContent = foodData.protein;
@@ -782,7 +1169,7 @@
       // Update benefits list
       const benefitsList = document.getElementById("benefits-list");
       benefitsList.innerHTML = "";
-      foodData.benefits.forEach(benefit => {
+      foodData.benefits[currentLanguage].forEach(benefit => {
         const li = document.createElement("li");
         li.innerHTML = `<i class="fas fa-check"></i> ${benefit}`;
         benefitsList.appendChild(li);
@@ -790,7 +1177,7 @@
       
       // Update result display
       document.getElementById("result").innerHTML = `
-        <span style="color: var(--primary-dark);">${foodName}</span>
+        <span style="color: var(--primary-dark);">${foodData.name[currentLanguage]}</span>
         <span style="font-size: 1rem; color: #666;">~${foodData.calories} kcal/100g</span>
       `;
     }
@@ -841,9 +1228,12 @@
       
       // Show confirmation
       document.getElementById("result").innerHTML = `
-        <span style="color: var(--primary);"><i class="fas fa-check-circle"></i> Captured:</span>
-        <span style="color: var(--primary-dark);"> ${lastCapture}</span>
+        <span style="color: var(--primary);"><i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'Captured:' : 'Снимано:'}</span>
+        <span style="color: var(--primary-dark);"> ${foodDatabase[lastCapture]?.name[currentLanguage] || lastCapture}</span>
       `;
+      
+      // Update recipe suggestions
+      updateRecipeSuggestions();
     }
 
     function addToHistory(foodName) {
@@ -852,6 +1242,7 @@
       
       const historyItem = {
         name: foodName,
+        displayName: foodData.name[currentLanguage],
         calories: foodData.calories,
         time: new Date().toLocaleTimeString(),
         timestamp: new Date().getTime()
@@ -877,7 +1268,7 @@
       historyList.innerHTML = "";
       
       if (foodHistory.length === 0) {
-        historyList.innerHTML = '<li style="text-align: center; padding: 1rem; color: #666;">No food scanned yet</li>';
+        historyList.innerHTML = `<li style="text-align: center; padding: 1rem; color: #666;">${currentLanguage === 'en' ? 'No food scanned yet' : 'Все още няма сканирана храна'}</li>`;
         return;
       }
       
@@ -888,7 +1279,7 @@
           <div class="history-item-info">
             <i class="fas fa-${getFoodIcon(item.name)} history-item-icon"></i>
             <div>
-              <div>${item.name}</div>
+              <div>${foodDatabase[item.name]?.name[currentLanguage] || item.name}</div>
               <div class="history-item-time">${item.time}</div>
             </div>
           </div>
@@ -911,13 +1302,21 @@
       foodHistory = foodHistory.filter(item => item.timestamp !== timestamp);
       localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
       updateHistoryList();
+      updateDailySummary();
+      updateRecipeSuggestions();
     }
 
     function clearHistory() {
-      if (confirm("Are you sure you want to clear your food history?")) {
+      const confirmMessage = currentLanguage === 'en' 
+        ? "Are you sure you want to clear your food history?" 
+        : "Сигурни ли сте, че искате да изчистите историята на храните?";
+      
+      if (confirm(confirmMessage)) {
         foodHistory = [];
         localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
         updateHistoryList();
+        updateDailySummary();
+        updateRecipeSuggestions();
       }
     }
 
@@ -937,6 +1336,7 @@
       dailyCalories.total += foodData.calories;
       dailyCalories.foods.push({
         name: foodName,
+        displayName: foodData.name[currentLanguage],
         calories: foodData.calories,
         carbs: foodData.carbs,
         protein: foodData.protein,
@@ -983,14 +1383,18 @@
       }
     }
 
-   function setDailyGoal() {
-  const newGoal = prompt("Enter your daily calorie goal:", dailyGoal);
-  if (newGoal && !isNaN(newGoal)) {
-    dailyGoal = parseInt(newGoal);
-    localStorage.setItem('dailyGoal', dailyGoal);
-    updateDailySummary();
-  }
-}
+    function setDailyGoal() {
+      const promptMessage = currentLanguage === 'en' 
+        ? "Enter your daily calorie goal:" 
+        : "Въведете дневната си калорична цел:";
+      
+      const newGoal = prompt(promptMessage, dailyGoal);
+      if (newGoal && !isNaN(newGoal)) {
+        dailyGoal = parseInt(newGoal);
+        localStorage.setItem('dailyGoal', dailyGoal);
+        updateDailySummary();
+      }
+    }
 
     function switchTab(e) {
       // Remove active class from all tabs
@@ -1012,7 +1416,101 @@
     }
 
     function showInfo() {
-      alert("How to use NutriVision:\n\n1. Point your camera at a food item\n2. The app will automatically recognize it\n3. See nutritional information and health benefits\n4. Press 'Capture' to freeze the analysis and save to history\n\nAll your scanned foods are saved in the history tab, and daily totals are calculated automatically.");
+      const message = currentLanguage === 'en' 
+        ? "How to use NutriVision:\n\n1. Point your camera at a food item\n2. The app will automatically recognize it\n3. See nutritional information and health benefits\n4. Press 'Capture' to freeze the analysis and save to history\n\nAll your scanned foods are saved in the history tab, and daily totals are calculated automatically."
+        : "Как да използвате NutriVision:\n\n1. Насочете камерата си към храна\n2. Приложението автоматично ще я разпознае\n3. Вижте хранителна информация и ползи за здравето\n4. Натиснете 'Снимай', за да запазите анализа и да го запишете в историята\n\nВсички сканирани храни се записват в раздела история и дневните суми се изчисляват автоматично.";
+      
+      alert(message);
+    }
+
+    function updateRecipeSuggestions() {
+      const recipeContainer = document.getElementById("recipe-suggestions");
+      recipeContainer.innerHTML = "";
+      
+      // Get unique recently scanned vegetables/fruits (last 5 items)
+      const recentScans = [...new Set(foodHistory.slice(0, 5).map(item => item.name))];
+      
+      if (recentScans.length === 0) {
+        recipeContainer.innerHTML = `
+          <p class="en">Scan some vegetables or fruits to get recipe suggestions.</p>
+          <p class="bg hidden">Сканирайте зеленчуци или плодове, за да получите предложения за рецепти.</p>
+        `;
+        return;
+      }
+      
+      // Find matching recipes
+      const matchingRecipes = findMatchingRecipes(recentScans);
+      
+      if (matchingRecipes.length === 0) {
+        recipeContainer.innerHTML = `
+          <p class="en">No recipes found for your recently scanned items. Try scanning more vegetables.</p>
+          <p class="bg hidden">Не са намерени рецепти за скоро сканираните продукти. Опитайте да сканирате повече зеленчуци.</p>
+        `;
+        return;
+      }
+      
+      // Display matching recipes
+      matchingRecipes.forEach(recipeKey => {
+        const recipe = recipeDatabase[recipeKey];
+        const recipeCard = document.createElement("div");
+        recipeCard.className = "recipe-card";
+        recipeCard.innerHTML = `
+          <div class="recipe-title">
+            <i class="fas fa-utensils"></i>
+            ${recipe.name[currentLanguage]}
+          </div>
+          <div class="recipe-ingredients">
+            <strong class="en">Ingredients:</strong>
+            <strong class="bg hidden">Съставки:</strong>
+            ${recipe.ingredients[currentLanguage].join(", ")}
+          </div>
+          <div class="recipe-description">
+            ${recipe.description[currentLanguage]}
+          </div>
+          <a href="${recipe.link[currentLanguage]}" target="_blank" class="recipe-link">
+            <span class="en">View recipe</span>
+            <span class="bg hidden">Виж рецепта</span>
+            <i class="fas fa-external-link-alt"></i>
+          </a>
+        `;
+        recipeContainer.appendChild(recipeCard);
+      });
+    }
+
+    function findMatchingRecipes(scannedItems) {
+      // Sort scanned items alphabetically for consistent matching
+      scannedItems.sort();
+      
+      // Try to find exact matches with 2-3 items
+      const possibleCombinations = [];
+      
+      // Check all possible 2-item combinations
+      for (let i = 0; i < scannedItems.length; i++) {
+        for (let j = i + 1; j < scannedItems.length; j++) {
+          const combo = [scannedItems[i], scannedItems[j]].sort().join(" ");
+          possibleCombinations.push(combo);
+        }
+      }
+      
+      // Check all possible 3-item combinations
+      for (let i = 0; i < scannedItems.length; i++) {
+        for (let j = i + 1; j < scannedItems.length; j++) {
+          for (let k = j + 1; k < scannedItems.length; k++) {
+            const combo = [scannedItems[i], scannedItems[j], scannedItems[k]].sort().join(" ");
+            possibleCombinations.push(combo);
+          }
+        }
+      }
+      
+      // Find matching recipes
+      const matchingRecipes = [];
+      possibleCombinations.forEach(combo => {
+        if (recipeDatabase[combo] && !matchingRecipes.includes(combo)) {
+          matchingRecipes.push(combo);
+        }
+      });
+      
+      return matchingRecipes;
     }
 
     // Initialize the app
